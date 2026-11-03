@@ -1,37 +1,41 @@
 # Ajaia Docs
 
-Ajaia Docs is a lightweight collaborative document workspace built with Django. It supports authenticated workspaces, rich-text documents, autosave, document sharing with viewer/editor roles, and TXT/Markdown/DOCX import.
+Ajaia Docs is a lightweight document workspace built with Django. It supports authenticated user accounts, rich-text document editing, autosaving, document sharing with viewer/editor roles, and importing TXT, Markdown, and DOCX files.
 
-## Project structure\n\nSee [CODE_STRUCTURE.md](CODE_STRUCTURE.md) for the folder map and a summary of how requests, models, templates and frontend assets fit together.\n\n## Features
+## Features
 
-- Django username/password authentication, public account registration, and account profile settings.
-- Show/hide password controls and a sign-out confirmation dialog.
-- Create, rename, edit, autosave and delete documents.
-- Quill rich-text editor with headings, bold, italic, underline, lists, blockquotes and links.
-- Share documents with registered users as Viewer or Editor; server-side permissions are enforced.
-- Import `.txt`, `.md` and `.docx` files (maximum 5 MB), create an editable document, retain the original file, download it, or delete the original independently.
-- SQLite locally; PostgreSQL via `DATABASE_URL` in production.
-- Django automated tests for document access and editor permissions.
+- Username/password authentication and public account registration.
+- Create, rename, edit, autosave, reopen, and delete documents.
+- Quill rich-text editor with headings, bold, italic, underline, lists, blockquotes, and links.
+- Share documents with registered users as Viewer or Editor.
+- Enforce document ownership and sharing permissions on the server.
+- Import `.txt`, `.md`, and `.docx` files up to 5 MB.
+- Retain uploaded originals so they can be downloaded or deleted independently of the imported document.
+- Use SQLite for local development and PostgreSQL through `DATABASE_URL` for production.
+- Include Django automated tests for core authentication, document access, and editor-permission behavior.
+
+## Project structure
+
+See [CODE_STRUCTURE.md](CODE_STRUCTURE.md) for the project folder map and an explanation of how the Django configuration, models, views, templates, and frontend assets fit together.
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.10 or later
 - pip
 
-## Local setup (Windows PowerShell)
+## Local setup
+
+### Windows PowerShell
 
 ```powershell
 cd ajaia-docs
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 pip install -r requirements.txt
-Copy-Item .env.example .env
 python manage.py migrate
-python manage.py createsuperuser
 python manage.py runserver
 ```
-
-Open http://127.0.0.1:8000. New users can register at `/accounts/signup/`; the first account can also be created with `python manage.py createsuperuser`. To demonstrate sharing, register a second account in a private/incognito browser window. Share by username.
 
 ### macOS / Linux
 
@@ -39,34 +43,66 @@ Open http://127.0.0.1:8000. New users can register at `/accounts/signup/`; the f
 cd ajaia-docs
 python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
 pip install -r requirements.txt
-cp .env.example .env
 python manage.py migrate
-python manage.py createsuperuser
 python manage.py runserver
 ```
 
-The example `.env` is a reference; the project reads environment variables directly. For local use, the built-in development secret is sufficient. Set a unique `SECRET_KEY` for any shared deployment.
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
 
-## Run tests
+New users can register at `/accounts/signup/`. You do not need to create a Django superuser for normal app usage. To create an administrator account for the Django admin interface, run:
 
 ```bash
-python manage.py test
+python manage.py createsuperuser
 ```
+
+To test document sharing, register a second user in another browser session and share a document with that user's username.
+
+### Environment variables
+
+The project reads configuration from environment variables. It does not automatically load a `.env` file, so do not assume that copying `.env.example` to `.env` will configure the application unless a dotenv loader has been added.
+
+For local PowerShell development, you can set variables for the current terminal session:
+
+```powershell
+$env:SECRET_KEY = "your-local-development-secret"
+$env:DEBUG = "True"
+```
+
+For production, set a unique secret key and the deployment variables described below through your hosting provider's environment-variable settings. Never commit real secrets or a populated `.env` file to Git.
+
+## Validate the project and run tests
+
+Run Django's system checks:
+
+```bash
+python manage.py check
+```
+
+Run the automated test suite:
+
+```bash
+python manage.py test --verbosity 2
+```
+
+Run these commands from the directory containing `manage.py`. Review the command output and resolve any reported errors before deployment.
 
 ## File import behavior
 
-Supported formats are `.txt`, `.md`, and `.docx`; maximum upload size is 5 MB. Imports create a new editable document. The original upload is retained in the database and can be downloaded or deleted from Uploaded files. Deleting the original upload does not delete the imported document. Images, PDFs and legacy `.doc` files are intentionally not supported.
+The application supports `.txt`, `.md`, and `.docx` uploads up to 5 MB. Importing a file creates a new editable document. The original uploaded file is retained and can be downloaded or deleted from the Uploaded files area.
 
-## Deployment notes
+Deleting the original upload does not delete the imported document. DOCX import extracts paragraph text; it does not preserve every feature of the original Word document, such as complex layouts or tables. PDF, image, and legacy `.doc` imports are not supported.
 
-The application supports PostgreSQL through `DATABASE_URL` and WhiteNoise for static assets. A production deployment needs a persistent PostgreSQL database and environment variables:
+## Deployment
 
-- `SECRET_KEY`: a long random secret.
-- `DEBUG=False`
-- `ALLOWED_HOSTS`: comma-separated hostnames.
-- `CSRF_TRUSTED_ORIGINS`: comma-separated HTTPS origins, e.g. `https://your-app.onrender.com`.
-- `DATABASE_URL`: PostgreSQL connection string.
+The project is configured to support PostgreSQL through `DATABASE_URL`, Gunicorn, and WhiteNoise for static assets. A production deployment requires a persistent PostgreSQL database and the following environment variables:
+
+- `SECRET_KEY`: a long, randomly generated secret.
+- `DEBUG`: set to `False`.
+- `ALLOWED_HOSTS`: comma-separated allowed hostnames.
+- `CSRF_TRUSTED_ORIGINS`: comma-separated trusted HTTPS origins, for example `https://your-app.onrender.com`.
+- `DATABASE_URL`: the PostgreSQL connection string supplied by the database provider.
 
 Build command:
 
@@ -80,12 +116,23 @@ Start command:
 gunicorn config.wsgi:application
 ```
 
-For a Render deployment, provision a PostgreSQL database, configure the variables above, and use the build/start commands. Do not use ephemeral SQLite storage for production. The original uploaded files are stored as database binary data, avoiding reliance on an ephemeral web-service disk. Configure a real deployment and verify it before sharing a live URL.
+For Render, create a PostgreSQL database, add the required environment variables to the web service, and configure the build and start commands above. Do not use ephemeral SQLite storage for production. Uploaded originals are stored as database binary data, so they do not depend on an ephemeral web-service disk.
+
+The presence of deployment configuration in the repository does not mean the application is already deployed. Verify the live service, database connection, static files, registration, document editing, and sharing before publishing a live URL.
 
 ## Security and limitations
 
-- All document routes require login. Owner/editor/viewer permissions are checked server-side.
+- Document routes require authentication.
+- Owner, editor, and viewer permissions are enforced by server-side checks.
 - Document HTML is sanitized with Bleach before storage and again before display.
-- File extension, size and DOCX archive signature are checked server-side; uploaded files are served as attachments.
-- This is a time-boxed assignment implementation, not an enterprise document platform. It does not include real-time multi-user editing, operational audit logs, version history, OAuth, virus scanning, or formal penetration testing.
-- Quill is loaded from a public CDN; an offline deployment should vendor the library locally.
+- Upload extension, size, and DOCX archive signature are checked server-side; uploaded originals are served as attachments.
+- This is a time-boxed assignment implementation, not an enterprise document platform.
+- Real-time multi-user editing, operational audit logs, version history, OAuth, virus scanning, and formal penetration testing are not included.
+- Quill is loaded from a public CDN. An offline deployment would need to serve the library locally.
+
+## Related project documentation
+
+- [Architecture](ARCHITECTURE.md) — application design, data flow, and technical decisions.
+- [Code structure](CODE_STRUCTURE.md) — directory layout and responsibilities.
+- [AI workflow](AI_WORKFLOW.md) — how AI assistance was used and how suggestions were reviewed.
+- [Submission checklist](SUBMISSION.md) — final links and materials required for handoff.
