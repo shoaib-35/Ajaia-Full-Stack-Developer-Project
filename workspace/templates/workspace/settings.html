@@ -1,0 +1,37 @@
+{% extends 'workspace/base.html' %}{% block title %}Account settings · Ajaia Docs{% endblock %}{% block content %}<div
+    class="page-heading">
+    <div class="eyebrow">PREFERENCES</div>
+    <h1>Account settings</h1>
+    <p class="muted">Manage your profile and keep your account secure.</p>
+</div>
+<div class="settings-layout">
+    <section class="settings-card">
+        <div class="settings-card-head">
+            <div class="quick-icon blue">◉</div>
+            <div>
+                <h2>Personal information</h2>
+                <p class="muted">The details associated with your account.</p>
+            </div>
+        </div>
+        <form method="post" class="settings-form">{% csrf_token %}<div class="form-two"><label>First name
+            {{form.first_name }}</label><label>Last name{{ form.last_name }}</label></div><label>Email address
+                {{form.email }}</label><label>Username<input class="field field-disabled" value="{{ user.username }}"
+                    disabled></label><button class="btn btn-primary">Save changes</button></form>
+    </section>
+    <section class="settings-card">
+        <div class="settings-card-head">
+            <div class="quick-icon violet">⌑</div>
+            <div>
+                <h2>Password & security</h2>
+                <p class="muted">Update your password to protect your workspace.</p>
+            </div>
+        </div>
+        <div class="security-row">
+            <div><strong>Password</strong>
+                <p class="muted">Choose a unique password you don't use elsewhere.</p>
+            </div><a class="btn btn-secondary" href="{% url 'password_change' %}">Change password</a>
+        </div>
+        <div class="security-note"><span>✓</span> Your password is securely hashed by Django. It is never stored as
+            plain text.</div>
+    </section>
+</div>{% endblock %}

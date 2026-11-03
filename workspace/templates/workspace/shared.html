@@ -1,0 +1,14 @@
+{% extends 'workspace/base.html' %}{% block title %}Shared with me · Ajaia Docs{% endblock %}{% block content %}<div
+    class="page-heading">
+    <div class="eyebrow">COLLABORATION</div>
+    <h1>Shared with me</h1>
+    <p class="muted">Documents teammates have invited you to.</p>
+</div>{% if entries %}<div class="shared-list">{% for doc, share in entries %}<a class="shared-row"
+        href="{% url 'document_detail' doc.pk %}"><span class="file-icon">▤</span><span class="shared-name"><strong>{{
+                doc.title }}</strong><small>Shared by {{ doc.owner.username }} · Updated {{ doc.updated_at|date:'M j, Y'
+                }}</small></span><span class="role-tag">{{ share.get_role_display }}</span><span
+            class="row-arrow">→</span></a>{% endfor %}</div>{% else %}<div class="empty-state">
+    <div class="empty-icon">♧</div>
+    <h3>Nothing shared just yet</h3>
+    <p>When someone shares a document with you, it will appear here.</p>
+</div>{% endif %}{% endblock %}

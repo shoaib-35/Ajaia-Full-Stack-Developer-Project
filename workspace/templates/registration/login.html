@@ -1,0 +1,42 @@
+{% extends 'workspace/base.html' %}{% load static %}{% block title %}Sign in · Ajaia Docs{% endblock %}
+{% block public_content %}
+<div class="auth-page">
+    <div class="auth-art">
+        <div class="auth-art-inner"><a class="brand brand-light" href="#"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none">
+            <path d="M7 3.8h7l4 4V20H7a2 2 0 0 1-2-2V5.8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.7" />
+            <path d="M14 4v4h4M8.5 12h7M8.5 15.5h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg></span><span>Ajaia
+                    <b>Docs</b></span></a><div><br><br><br></div>
+            <div class="auth-quote">
+                <div class="quote-mark">“</div>
+                <h1>Good work happens when ideas have room to grow.</h1>
+                <div class="quote-mark">”</div>
+            </div>
+        </div>
+    </div>
+    <div class="auth-panel">
+        <div class="auth-form-wrap">
+            <div class="mobile-brand brand"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none">
+            <path d="M7 3.8h7l4 4V20H7a2 2 0 0 1-2-2V5.8a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.7" />
+            <path d="M14 4v4h4M8.5 12h7M8.5 15.5h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg></span><span>Ajaia <b>Docs</b></span></div>
+            <div class="eyebrow">WELCOME BACK</div>
+            <h2>Sign in to your workspace</h2>
+            <p class="muted">Pick up where you left off.</p>
+            {% if form.errors %}<div class="form-error">Your username or password was incorrect. Please try again.</div>
+            {% endif %}
+            <form method="post" class="stack-form">{% csrf_token %}<label>Username<input class="field" type="text"
+                        name="username" autocomplete="username" required autofocus
+                        placeholder="Your username"></label><label>Password<div class="password-wrap"><input
+                            class="field" id="login-password" type="password" name="password"
+                            autocomplete="current-password" required placeholder="Enter your password"><button
+                            class="password-toggle" type="button" data-password-target="login-password"
+                            aria-label="Show password">Show</button></div></label><button
+                    class="btn btn-primary btn-wide" type="submit">Continue <span>→</span></button><input type="hidden"
+                    name="next" value="{{ next }}"></form>
+            <p class="auth-switch">New to Ajaia Docs? <a href="{% url 'signup' %}">Create an account</a></p>
+            <p class="auth-note">Your workspace is private and protected by Django authentication.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+
+{% extends 'workspace/base.html' %}
+{% load static %}
+{% block title %}{{ document.title }} · Ajaia Docs{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'dashboard' %}">Documents</a>
+<span>/</span>
+{{ document.title }}
+{% endblock %}
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<!-- Editor Header -->
+<div class="editor-top">
+    <div class="editor-title-area">
+        <a class="back-link" href="{% url 'dashboard' %}">← Back to documents</a>
+        {% if role == 'owner' %}
+        <form method="post" action="{% url 'document_rename' document.pk %}" class="rename-form">
+            {% csrf_token %}
+            <input name="title" class="title-input" value="{{ document.title }}" maxlength="200" aria-label="Document title">
+            <button class="icon-button" title="Save title">↵</button>
+        </form>
+        {% else %}
+        <h1 class="editor-heading">{{ document.title }}</h1>
+        {% endif %}
+        <div class="save-status" id="save-status">
+            {% if can_edit %}All changes saved{% else %}Read-only access{% endif %}
+        </div>
+    </div>
+    <!-- Editor Actions -->
+    <div class="editor-actions">
+        {% if role == 'owner' %}
+        <button class="btn btn-secondary" data-open-modal="share-modal">Share <span>↗</span></button>
+        <form method="post" action="{% url 'document_delete' document.pk %}" data-confirm="Delete this document? This cannot be undone.">
+            {% csrf_token %}
+            <button class="icon-button danger" title="Delete document">
+                <svg fill="#000000" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 482.428 482.429" xml:space="preserve">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                        <g>
+                            <g>
+                                <path d="M381.163,57.799h-75.094C302.323,25.316,274.686,0,241.214,0c-33.471,0-61.104,25.315-64.85,57.799h-75.098 c-30.39,0-55.111,24.728-55.111,55.117v2.828c0,23.223,14.46,43.1,34.83,51.199v260.369c0,30.39,24.724,55.117,55.112,55.117 h210.236c30.389,0,55.111-24.729,55.111-55.117V166.944c20.369-8.1,34.83-27.977,34.83-51.199v-2.828 C436.274,82.527,411.551,57.799,381.163,57.799z M241.214,26.139c19.037,0,34.927,13.645,38.443,31.66h-76.879 C206.293,39.783,222.184,26.139,241.214,26.139z M375.305,427.312c0,15.978-13,28.979-28.973,28.979H136.096 c-15.973,0-28.973-13.002-28.973-28.979V170.861h268.182V427.312z M410.135,115.744c0,15.978-13,28.979-28.973,28.979H101.266 c-15.973,0-28.973-13.001-28.973-28.979v-2.828c0-15.978,13-28.979,28.973-28.979h279.897c15.973,0,28.973,13.001,28.973,28.979 V115.744z"></path>
+                                <path d="M171.144,422.863c7.218,0,13.069-5.853,13.069-13.068V262.641c0-7.216-5.852-13.07-13.069-13.07 c-7.217,0-13.069,5.854-13.069,13.07v147.154C158.074,417.012,163.926,422.863,171.144,422.863z"></path>
+                                <path d="M241.214,422.863c7.218,0,13.07-5.853,13.07-13.068V262.641c0-7.216-5.854-13.07-13.07-13.07 c-7.217,0-13.069,5.854-13.069,13.07v147.154C228.145,417.012,233.996,422.863,241.214,422.863z"></path>
+                                <path d="M311.284,422.863c7.217,0,13.068-5.853,13.068-13.068V262.641c0-7.216-5.852-13.07-13.068-13.07 c-7.219,0-13.07,5.854-13.07,13.07v147.154C298.213,417.012,304.067,422.863,311.284,422.863z"></path>
+                            </g>
+                        </g>
+                    </g>
+                </svg>
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+<!-- Document Editor -->
+<div class="editor-surface {% if not can_edit %}read-only{% endif %}">
+    <!-- Quill Toolbar -->
+    <div id="toolbar" {% if not can_edit %}hidden{% endif %}>
+        <span class="ql-formats">
+            <select class="ql-header">
+                <option selected></option>
+                <option value="1"></option>
+                <option value="2"></option>
+                <option value="3"></option>
+            </select>
+        </span>
+        <span class="ql-formats">
+            <button class="ql-bold"></button>
+            <button class="ql-italic"></button>
+            <button class="ql-underline"></button>
+        </span>
+        <span class="ql-formats">
+            <button class="ql-list" value="ordered"></button>
+            <button class="ql-list" value="bullet"></button>
+            <button class="ql-blockquote"></button>
+        </span>
+        <span class="ql-formats">
+            <button class="ql-link"></button>
+            <button class="ql-clean"></button>
+        </span>
+    </div>
+    <!-- Editor Content -->
+    <div id="editor" data-can-edit="{{ can_edit|yesno:'true,false' }}">{{ safe_content|safe }}</div>
+</div>
+<!-- Editor Footer -->
+{% if role == 'owner' %}
+<div class="editor-footnote">Changes are saved automatically. Sharing is limited to registered Ajaia users.</div>
+{% endif %}
+{% endblock %}
+<!-- Editor JavaScript -->
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+<script>
+    window.AJAIA_EDITOR = {
+        saveUrl: "{% url 'document_save' document.pk %}",
+        csrf: "{{ csrf_token }}",
+        editable: {{ can_edit|yesno:'true,false' }}
+    };
+</script>
+<script src="{% static 'js/editor.js' %}"></script>
+<!-- Document Sharing Modal -->
+{% if role == 'owner' %}
+<div class="modal-backdrop" id="share-modal" aria-hidden="true">
+    <section class="modal modal-wide" role="dialog" aria-modal="true">
+        <button class="modal-x" data-close-modal>×</button>
+        <div class="eyebrow">COLLABORATION</div>
+        <h2>Share this document</h2>
+        <p class="muted">Invite an existing Ajaia user to work with you.</p>
+        <!-- Share Form -->
+        <form method="post" action="{% url 'document_share' document.pk %}" class="share-form">
+            {% csrf_token %}
+            <label>
+                Username
+                <input class="field" name="username" placeholder="Enter their username" required>
+            </label>
+            <label>
+                Access
+                <select class="field" name="role">
+                    <option value="viewer">Viewer · Can read</option>
+                    <option value="editor">Editor · Can make changes</option>
+                </select>
+            </label>
+            <button class="btn btn-primary">Share document</button>
+        </form>
+        <!-- Existing Shared Users -->
+        <div class="share-existing">
+            <h3>People with access</h3>
+            <div class="share-person">
+                <div class="avatar">{{ user.username|first|upper }}</div>
+                <div class="profile-copy">
+                    <strong>{{ user.username }} (you)</strong>
+                    <small>Owner</small>
+                </div>
+            </div>
+            {% for share in shares %}
+            <div class="share-person">
+                <div class="avatar avatar-muted">{{ share.user.username|first|upper }}</div>
+                <div class="profile-copy">
+                    <strong>{{ share.user.username }}</strong>
+                    <small>{{ share.get_role_display }}</small>
+                </div>
+                <form method="post" action="{% url 'document_revoke' document.pk share.user_id %}">
+                    {% csrf_token %}
+                    <button class="text-action danger-text">Remove</button>
+                </form>
+            </div>
+            {% empty %}
+            <p class="muted small">No one else has access yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endif %}
+{% endblock %}
