@@ -12,13 +12,13 @@ SECRET_KEY = os.getenv(
     "SECRET_KEY",
     "local-development-only-change-before-deploying",
 )
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in {'1', 'true', 'yes'}
+
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv(
-        "ALLOWED_HOSTS",
-        "127.0.0.1,localhost",
-    ).split(",")
+        'DJANGO_ALLOWED_HOSTS',
+    ).split(',')
     if host.strip()
 ]
 CSRF_TRUSTED_ORIGINS = [
